@@ -14,7 +14,7 @@ install:
   - docker-compose version
   - sed -i -e "s/php:cli/php:${TRAVIS_PHP_VERSION}-cli/g" Dockerfile
   - cat Dockerfile
-  - docker-compose --build
+  - docker-compose build
 
 script:
   - docker-compose up --exit-code-from tests
