@@ -1,4 +1,15 @@
 {
+  "name": "jenssegers/mongodb-core",
+  "description": "A MongoDB based Query builder for Laravel",
+  "keywords": ["laravel","mongodb","mongo","database","model","moloquent"],
+  "homepage": "https://github.com/jenssegers/laravel-mongodb-core",
+  "authors": [
+    {
+      "name": "Jens Segers",
+      "homepage": "https://jenssegers.com"
+    }
+  ],
+  "license" : "MIT",
   "require": {
     "illuminate/database": "^5.6",
     "mongodb/mongodb": "^1.0"
