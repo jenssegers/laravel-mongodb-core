@@ -2,6 +2,7 @@
 
 namespace Jenssegers\Mongodb\Query\Grammars;
 
+use Closure;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\Grammars\Grammar;
 use Illuminate\Support\Str;
@@ -11,6 +12,9 @@ use RuntimeException;
 
 class MongoGrammar extends Grammar
 {
+    /**
+     * @var array
+     */
     protected $operators = [
         'eq',
         'gt',
@@ -49,6 +53,9 @@ class MongoGrammar extends Grammar
         'slice',
     ];
 
+    /**
+     * @var array
+     */
     protected $operatorConversion = [
         '!=' => 'ne',
         '<>' => 'ne',
@@ -60,9 +67,13 @@ class MongoGrammar extends Grammar
 
     public function __construct()
     {
+        // Add additional components that should be compiled.
         $this->selectComponents = array_merge($this->selectComponents, ['projections', 'addFields']);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function compileSelect(Builder $query)
     {
         $components = $this->compileComponents($query);
@@ -82,7 +93,11 @@ class MongoGrammar extends Grammar
         };
     }
 
-    protected function compilePipeline($components)
+    /**
+     * @param array $components
+     * @return array
+     */
+    protected function compilePipeline(array $components)
     {
         $pipeline = [];
 
@@ -116,6 +131,9 @@ class MongoGrammar extends Grammar
         return $pipeline;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileAggregate(Builder $query, $aggregate)
     {
         $aggregate['columns'] = $this->compileColumns($query, $aggregate['columns']);
@@ -133,16 +151,39 @@ class MongoGrammar extends Grammar
         return ['$' . $aggregate['function'] => '$' . reset($aggregate['columns'])];
     }
 
+    /**
+     * @param Builder $query
+     * @param array $projection
+     * @return mixed
+     */
     protected function compileProjections(Builder $query, $projection)
     {
         return $projection;
     }
 
+    /**
+     * @param Builder $query
+     * @param array $fields
+     * @return array
+     */
     protected function compileAddFields(Builder $query, $fields)
     {
-        return $fields;
+        if (empty($fields)) {
+            return [];
+        }
+
+        $compiled = [];
+
+        foreach ($fields as $field) {
+            $compiled[$field['column']] = $field['expression'];
+        }
+
+        return $compiled;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileColumns(Builder $query, $columns)
     {
         if (in_array('*', $columns)) {
@@ -152,16 +193,25 @@ class MongoGrammar extends Grammar
         return $columns;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileFrom(Builder $query, $table)
     {
         return $table;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileJoins(Builder $query, $joins)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileWheres(Builder $query)
     {
         if ($query->wheres === null) {
@@ -182,11 +232,17 @@ class MongoGrammar extends Grammar
         return $compiled;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereRaw(Builder $query, $where)
     {
         return $where['sql'];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereBasic(Builder $query, $where)
     {
         $where['operator'] = ltrim($where['operator'], '$');
@@ -234,36 +290,57 @@ class MongoGrammar extends Grammar
         return [$where['column'] => ['$' . $where['operator'] => $where['value']]];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereIn(Builder $query, $where)
     {
         return [$where['column'] => ['$in' => $where['values']]];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNotIn(Builder $query, $where)
     {
         return [$where['column'] => ['$nin' => $where['values']]];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereInSub(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNotInSub(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNull(Builder $query, $where)
     {
         return [$where['column'] => null];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNotNull(Builder $query, $where)
     {
         return [$where['column'] => ['$ne' => null]];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereBetween(Builder $query, $where)
     {
         if ($where['not']) {
@@ -291,6 +368,9 @@ class MongoGrammar extends Grammar
         ];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function dateBasedWhere($type, Builder $query, $where)
     {
         switch (strtolower($type)) {
@@ -334,86 +414,139 @@ class MongoGrammar extends Grammar
         ];
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereColumn(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNested(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereSub(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereExists(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function whereNotExists(Builder $query, $where)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileGroups(Builder $query, $groups)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileHavings(Builder $query, $havings)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileHaving(array $having)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileBasicHaving($having)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileOrders(Builder $query, $orders)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function compileRandom($seed)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileLimit(Builder $query, $limit)
     {
         return (int) $limit;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileOffset(Builder $query, $offset)
     {
-        throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
+        return (int) $offset;
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileUnions(Builder $query)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileUnion(array $union)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function compileExists(Builder $query)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @param Builder $query
+     * @param array $values
+     * @return Closure
+     */
     public function compileInsert(Builder $query, array $values)
     {
         return function (Database $database) use ($query, $values) {
@@ -423,6 +556,12 @@ class MongoGrammar extends Grammar
         };
     }
 
+    /**
+     * @param Builder $query
+     * @param array $values
+     * @param string $sequence
+     * @return Closure
+     */
     public function compileInsertGetId(Builder $query, $values, $sequence)
     {
         return function (Database $database) use ($query, $values) {
@@ -432,6 +571,11 @@ class MongoGrammar extends Grammar
         };
     }
 
+    /**
+     * @param Builder $query
+     * @param array $values
+     * @return Closure
+     */
     public function compileUpdate(Builder $query, $values)
     {
         $wheres = $this->compileWheres($query);
@@ -448,6 +592,10 @@ class MongoGrammar extends Grammar
         };
     }
 
+    /**
+     * @param Builder $query
+     * @return Closure
+     */
     public function compileDelete(Builder $query)
     {
         $wheres = $this->compileWheres($query);
@@ -459,6 +607,10 @@ class MongoGrammar extends Grammar
         };
     }
 
+    /**
+     * @param Builder $query
+     * @return Closure
+     */
     public function compileTruncate(Builder $query)
     {
         return function (Database $database) use ($query) {
@@ -466,16 +618,25 @@ class MongoGrammar extends Grammar
         };
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function compileLock(Builder $query, $value)
     {
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getOperators()
     {
         return array_map('strtolower', $this->operators);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function supportsSavepoints()
     {
         return false;

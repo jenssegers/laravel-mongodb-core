@@ -66,6 +66,9 @@ class Connection extends BaseConnection
         );
     }
 
+    /**
+     * @inheritdoc
+     */
     public function statement($query, $bindings = [])
     {
         return $this->run($query, $bindings, function ($query) {
@@ -79,6 +82,9 @@ class Connection extends BaseConnection
         });
     }
 
+    /**
+     * @inheritdoc
+     */
     public function affectingStatement($query, $bindings = [])
     {
         return $this->run($query, $bindings, function ($query) {
@@ -94,6 +100,9 @@ class Connection extends BaseConnection
         });
     }
 
+    /**
+     * @inheritdoc
+     */
     public function select($query, $bindings = [], $useReadClient = true)
     {
         return $this->run($query, $bindings, function ($query) use ($useReadClient) {
@@ -105,6 +114,9 @@ class Connection extends BaseConnection
         });
     }
 
+    /**
+     * @inheritdoc
+     */
     protected function runQueryCallback($query, $bindings, Closure $callback)
     {
         // To execute the statement, we'll simply call the callback, which will actually
@@ -124,6 +136,9 @@ class Connection extends BaseConnection
         return $result;
     }
 
+    /**
+     * @inheritdoc
+     */
     public function getDoctrineConnection()
     {
         throw new RuntimeException('Not supported');

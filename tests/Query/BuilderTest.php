@@ -450,4 +450,82 @@ class BuilderTest extends TestCase
         $results = $this->db->collection('users')->whereTime('birthday', '12:00:00')->get();
         $this->assertCount(1, $results);
     }
+
+    public function testWhereRaw()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'age' => 20],
+            ['name' => 'John Doe', 'age' => 30],
+            ['name' => 'Mark Moe', 'age' => 25],
+            ['name' => 'Larry Loe', 'age' => 40],
+        ]);
+
+        $results = $this->db->collection('users')->whereRaw([
+            'age' => ['$in' => [20, 30]],
+        ])->get();
+        $this->assertCount(2, $results);
+    }
+
+    public function testAddFields()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'foo' => 1, 'bar' => 5],
+            ['name' => 'John Doe', 'foo' => 2, 'bar' => 6],
+            ['name' => 'Mark Moe', 'foo' => 3, 'bar' => 7],
+            ['name' => 'Larry Loe', 'foo' => 4, 'bar' => 8],
+        ]);
+
+        $results = $this->db->collection('users')
+            ->addField('sum', ['$add' => ['$foo', '$bar']])
+            ->addField('max', ['$max' => ['$foo', '$bar']])
+            ->get();
+
+        $this->assertEquals(6, $results->first()->sum);
+        $this->assertEquals(5, $results->first()->max);
+    }
+
+    public function testLimit()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'age' => 20],
+            ['name' => 'John Doe', 'age' => 30],
+            ['name' => 'Mark Moe', 'age' => 25],
+            ['name' => 'Larry Loe', 'age' => 40],
+        ]);
+
+        $results = $this->db->collection('users')->limit(1)->get();
+        $this->assertCount(1, $results);
+        $this->assertEquals('Jane Doe', $results->first()->name);
+
+        $results = $this->db->collection('users')->limit(2)->get();
+        $this->assertCount(2, $results);
+        $this->assertEquals('John Doe', $results->last()->name);
+
+        $results = $this->db->collection('users')
+            ->whereBetween('age', [21, 100])->limit(2)->get();
+        $this->assertCount(2, $results);
+        $this->assertEquals('John Doe', $results->first()->name);
+    }
+
+    public function testOffset()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'age' => 20],
+            ['name' => 'John Doe', 'age' => 30],
+            ['name' => 'Mark Moe', 'age' => 25],
+            ['name' => 'Larry Loe', 'age' => 40],
+        ]);
+
+        $results = $this->db->collection('users')->offset(1)->get();
+        $this->assertCount(3, $results);
+        $this->assertEquals('John Doe', $results->first()->name);
+
+        $results = $this->db->collection('users')->offset(2)->get();
+        $this->assertCount(2, $results);
+        $this->assertEquals('Mark Moe', $results->first()->name);
+
+        $results = $this->db->collection('users')->offset(2)->limit(1)->get();
+        $this->assertCount(1, $results);
+        $this->assertEquals('Mark Moe', $results->first()->name);
+    }
 }

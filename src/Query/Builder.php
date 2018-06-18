@@ -57,11 +57,17 @@ class Builder extends BaseBuilder
         parent::__construct($connection, $grammar, $processor);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function find($id, $columns = ['*'])
     {
         return $this->where('_id', '=', $id)->first($columns);
     }
 
+    /**
+     * @inheritdoc
+     */
     public function delete($id = null)
     {
         // If an ID is passed to the method, we will set the where clause to check the
@@ -74,18 +80,30 @@ class Builder extends BaseBuilder
         return parent::delete();
     }
 
+    /**
+     * @inheritdoc
+     */
     public function truncate()
     {
         $this->connection->statement($this->grammar->compileTruncate($this));
     }
 
-    public function addFields(array $fields)
+    /**
+     * @param string $column
+     * @param array $expression
+     * @return $this
+     */
+    public function addField($column, array $expression)
     {
-        $this->addFields = $fields;
+        $this->addFields[] = compact('column', 'expression');
 
         return $this;
     }
 
+    /**
+     * @param array $projection
+     * @return $this
+     */
     public function project(array $projection)
     {
         $this->projections = $projection;
@@ -93,6 +111,20 @@ class Builder extends BaseBuilder
         return $this;
     }
 
+    /**
+     * @param array $sql
+     * @param mixed $bindings
+     * @param string $boolean
+     * @return $this
+     */
+    public function whereRaw($sql, $bindings = [], $boolean = 'and')
+    {
+        return parent::whereRaw($sql, $bindings, $boolean);
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function whereBetween($column, array $values, $boolean = 'and', $not = false)
     {
         $type = 'between';
