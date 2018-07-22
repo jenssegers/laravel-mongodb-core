@@ -662,6 +662,13 @@ class MongoGrammar extends Grammar
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    /**
+     * @param Builder $query
+     * @param mixed $column
+     * @param mixed $value
+     * @param bool $unique
+     * @return Closure
+     */
     public function compilePush(Builder $query, $column, $value, $unique)
     {
         // Use the addToSet operator in case we only want unique items.
@@ -674,6 +681,29 @@ class MongoGrammar extends Grammar
             $compiled = [$operator => $column];
         } elseif ($batch) {
             $compiled = [$operator => [$column => ['$each' => $value]]];
+        } else {
+            $compiled = [$operator => [$column => $value]];
+        }
+
+        return $this->compileUpdate($query, $compiled);
+    }
+
+    /**
+     * @param Builder $query
+     * @param mixed $column
+     * @param mixed $value
+     * @return Closure
+     */
+    public function compilePull(Builder $query, $column, $value)
+    {
+        // Check if we are pushing multiple values.
+        $batch = (is_array($value) && array_keys($value) === range(0, count($value) - 1));
+
+        // If we are pulling multiple values, we need to use $pullAll.
+        $operator = $batch ? '$pullAll' : '$pull';
+
+        if (is_array($column)) {
+            $compiled = [$operator => $column];
         } else {
             $compiled = [$operator => [$column => $value]];
         }

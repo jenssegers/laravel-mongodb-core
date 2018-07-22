@@ -676,4 +676,65 @@ class BuilderTest extends TestCase
         $user2 = $this->db->collection('users')->where('name', 'Jane Doe')->first();
         $this->assertContains('all', $user2->tags);
     }
+
+    public function testPull()
+    {
+        $this->db->collection('users')->insert([
+            [
+                'name' => 'Jane Doe',
+                'tags' => ['tag1', 'tag5'],
+                'messages' => [],
+            ],
+            [
+                'name' => 'John Doe',
+                'tags' => ['tag1', 'tag2', 'tag3', 'tag4', 'tag5'],
+                'messages' => [
+                    ['from' => 'Jane', 'body' => 'Hi John'],
+                    ['from' => 'Mark', 'body' => 'Hi John'],
+                ],
+            ],
+        ]);
+
+        $id = $this->db->collection('users')->insertGetId([
+            'name' => 'John Doe',
+            'tags' => ['tag1', 'tag2', 'tag3', 'tag4'],
+            'messages' => [
+                ['from' => 'Jane', 'body' => 'Hi John'],
+                ['from' => 'Mark', 'body' => 'Hi John'],
+            ],
+        ]);
+
+        // Pull single values
+        $this->db->collection('users')->where('_id', $id)->pull('tags', 'tag3');
+        $user = $this->db->collection('users')->find($id);
+        $this->assertInternalType('array', $user->tags);
+        $this->assertNotContains('tag3', $user->tags);
+
+        // Pull object
+        $this->db->collection('users')->where('_id', $id)->pull('messages', ['from' => 'Jane', 'body' => 'Hi John']);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(1, $user->messages);
+
+        // Pull multiple values
+        $this->db->collection('users')->where('_id', $id)->pull('tags', ['tag1', 'tag4']);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertNotContains('tag1', $user->tags);
+        $this->assertNotContains('tag4', $user->tags);
+
+        // Pull from all
+        $this->db->collection('users')->pull('tags', ['tag5']);
+        $user1 = $this->db->collection('users')->find($id);
+        $this->assertNotContains('tag5', $user1->tags);
+        $user2 = $this->db->collection('users')->where('name', 'Jane Doe')->first();
+        $this->assertNotContains('tag5', $user2->tags);
+
+        // Raw
+        $this->db->collection('users')->where('_id', $id)->pull([
+            'tags' => 'tag2',
+            'messages' => ['from' => 'Mark', 'body' => 'Hi John'],
+        ]);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(0, $user->tags);
+        $this->assertCount(0, $user->messages);
+    }
 }

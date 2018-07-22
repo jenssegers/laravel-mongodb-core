@@ -135,7 +135,7 @@ class Builder extends BaseBuilder
     }
 
     /**
-     * Append one or more values to an array.
+     * Append one or more values to a list.
      *
      * @param mixed $column
      * @param mixed $value
@@ -146,6 +146,20 @@ class Builder extends BaseBuilder
     {
         return $this->connection->affectingStatement(
             $this->grammar->compilePush($this, $column, $value, $unique)
+        );
+    }
+
+    /**
+     * Remove one or more values from a list.
+     *
+     * @param mixed $column
+     * @param mixed $value
+     * @return int
+     */
+    public function pull($column, $value = null)
+    {
+        return $this->connection->affectingStatement(
+            $this->grammar->compilePull($this, $column, $value)
         );
     }
 }
