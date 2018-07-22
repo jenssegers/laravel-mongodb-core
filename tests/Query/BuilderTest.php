@@ -96,6 +96,32 @@ class BuilderTest extends TestCase
         $this->assertCount(0, $result);
     }
 
+    public function testWhereNested()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'John Doe', 'address' => ['country' => 'France', 'city' => 'Paris']],
+            ['name' => 'Jane Doe', 'address' => ['country' => 'Belgium', 'city' => 'Ghent']],
+        ]);
+
+        $result = $this->db->collection('users')->where('address.country', 'Belgium')->get();
+        $this->assertCount(1, $result);
+        $this->assertEquals('Jane Doe', $result[0]->name);
+    }
+
+    public function testWhereList()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'tags' => ['tag1', 'tag2']],
+            ['name' => 'John Doe', 'tags' => ['tag3', 'tag2']],
+        ]);
+
+        $result = $this->db->collection('users')->where('tags', 'tag1')->get();
+        $this->assertCount(1, $result);
+
+        $result = $this->db->collection('users')->where('tags', 'tag2')->get();
+        $this->assertCount(2, $result);
+    }
+
     public function testFind()
     {
         $id = $this->db->collection('users')->insertGetId(['name' => 'John Doe']);
@@ -143,6 +169,9 @@ class BuilderTest extends TestCase
 
     public function testFirst()
     {
+        $result = $this->db->collection('users')->first();
+        $this->assertEquals(null, $result);
+
         $this->db->collection('users')->insert([
             ['name' => 'Jane Doe', 'age' => 20],
             ['name' => 'John Doe', 'age' => 21],
@@ -154,6 +183,9 @@ class BuilderTest extends TestCase
 
         $result = $this->db->collection('users')->where('foo', 'bar')->first();
         $this->assertNull($result);
+
+        $result = $this->db->collection('users')->where('age', 21)->first();
+        $this->assertEquals('John Doe', $result->name);
     }
 
     public function testDelete()
@@ -562,5 +594,86 @@ class BuilderTest extends TestCase
         $this->assertObjectNotHasAttribute('name', $result);
         $this->assertObjectNotHasAttribute('foo', $result);
         $this->assertObjectNotHasAttribute('bar', $result);
+    }
+
+    public function testTruncate()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'age' => 20],
+            ['name' => 'John Doe', 'age' => 21],
+            ['name' => 'Mark Moe', 'age' => 20],
+        ]);
+
+        $this->db->collection('users')->truncate();
+        $this->assertEquals(0, $this->db->collection('users')->count());
+    }
+
+    public function testPush()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'tags' => [], 'messages' => []],
+            ['name' => 'John Doe', 'tags' => [], 'messages' => []],
+        ]);
+        $id = $this->db->collection('users')->where('name', 'John Doe')->first()->_id;
+
+        // Single value
+        $modified = $this->db->collection('users')->where('_id', $id)->push('tags', 'tag1');
+        $this->assertEquals(1, $modified);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertInternalType('array', $user->tags);
+        $this->assertCount(1, $user->tags);
+        $this->assertEquals('tag1', $user->tags[0]);
+
+        // Another single value
+        $this->db->collection('users')->where('_id', $id)->push('tags', 'tag2');
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(2, $user->tags);
+        $this->assertEquals('tag2', $user->tags[1]);
+
+        // Add duplicate
+        $this->db->collection('users')->where('_id', $id)->push('tags', 'tag2');
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(3, $user->tags);
+
+        // Add unique
+        $this->db->collection('users')->where('_id', $id)->push('tags', 'tag1', true);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(3, $user->tags);
+
+        // Add object
+        $message = ['from' => 'Jane', 'body' => 'Hi John'];
+        $this->db->collection('users')->where('_id', $id)->push('messages', $message);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(1, $user->messages);
+        $this->assertInternalType('object', $user->messages[0]);
+        $this->assertEquals('Jane', $user->messages[0]->from);
+
+        // Add multiple values
+        $this->db->collection('users')->where('_id', $id)->push('tags', ['tag3', 'tag4']);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(5, $user->tags);
+
+        // Raw
+        $this->db->collection('users')->where('_id', $id)->push([
+            'tags' => 'tag3',
+            'messages' => ['from' => 'Mark', 'body' => 'Hi John'],
+        ]);
+        $user = $this->db->collection('users')->find($id);
+        $this->assertCount(6, $user->tags);
+        $this->assertCount(2, $user->messages);
+
+        // Check other user is not modified
+        $user = $this->db->collection('users')->where('name', 'Jane Doe')->first();
+        $this->assertEmpty($user->tags);
+
+        // Push on multiple records
+        $modified = $this->db->collection('users')->push([
+            'tags' => 'all',
+        ]);
+        $this->assertEquals(2, $modified);
+        $user1 = $this->db->collection('users')->where('name', 'Jane Doe')->first();
+        $this->assertContains('all', $user1->tags);
+        $user2 = $this->db->collection('users')->where('name', 'Jane Doe')->first();
+        $this->assertContains('all', $user2->tags);
     }
 }

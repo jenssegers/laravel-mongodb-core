@@ -67,7 +67,9 @@ class Connection extends BaseConnection
     }
 
     /**
-     * @inheritdoc
+     * @param callable $query
+     * @param array $bindings
+     * @return bool|mixed
      */
     public function statement($query, $bindings = [])
     {

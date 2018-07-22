@@ -662,6 +662,25 @@ class MongoGrammar extends Grammar
         throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
     }
 
+    public function compilePush(Builder $query, $column, $value, $unique)
+    {
+        // Use the addToSet operator in case we only want unique items.
+        $operator = $unique ? '$addToSet' : '$push';
+
+        // Check if we are pushing multiple values.
+        $batch = (is_array($value) && array_keys($value) === range(0, count($value) - 1));
+
+        if (is_array($column)) {
+            $compiled = [$operator => $column];
+        } elseif ($batch) {
+            $compiled = [$operator => [$column => ['$each' => $value]]];
+        } else {
+            $compiled = [$operator => [$column => $value]];
+        }
+
+        return $this->compileUpdate($query, $compiled);
+    }
+
     /**
      * @inheritdoc
      */

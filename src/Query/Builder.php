@@ -133,4 +133,19 @@ class Builder extends BaseBuilder
 
         return $this;
     }
+
+    /**
+     * Append one or more values to an array.
+     *
+     * @param mixed $column
+     * @param mixed $value
+     * @param bool $unique
+     * @return int
+     */
+    public function push($column, $value = null, $unique = false)
+    {
+        return $this->connection->affectingStatement(
+            $this->grammar->compilePush($this, $column, $value, $unique)
+        );
+    }
 }
