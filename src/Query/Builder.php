@@ -104,9 +104,9 @@ class Builder extends BaseBuilder
      * @param array $projection
      * @return $this
      */
-    public function project(array $projection)
+    public function project($column, $projection)
     {
-        $this->projections = $projection;
+        $this->projections[] = compact('column', 'projection');
 
         return $this;
     }

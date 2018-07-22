@@ -115,10 +115,13 @@ class BuilderTest extends TestCase
         $this->db->collection('users')->insert([
             ['name' => 'Jane Doe', 'age' => 20],
             ['name' => 'John Doe', 'age' => null],
-            ['name' => 'Mark Moe', 'age' => 20],
+            ['name' => 'Mark Moe', 'age' => 21],
         ]);
 
+        $this->assertEquals(3, $this->db->collection('users')->count());
         $this->assertEquals(2, $this->db->collection('users')->count('age'));
+        $this->assertEquals(1, $this->db->collection('users')->where('age', null)->count());
+        $this->assertEquals(2, $this->db->collection('users')->where('age', '>', 10)->count());
     }
 
     public function testUpdate()
@@ -527,5 +530,37 @@ class BuilderTest extends TestCase
         $results = $this->db->collection('users')->offset(2)->limit(1)->get();
         $this->assertCount(1, $results);
         $this->assertEquals('Mark Moe', $results->first()->name);
+    }
+
+    public function testOrderBy()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'age' => 30],
+            ['name' => 'John Doe', 'age' => 20],
+            ['name' => 'Mark Moe', 'age' => 25],
+            ['name' => 'Larry Loe', 'age' => 40],
+        ]);
+
+        $results = $this->db->collection('users')->orderBy('age', 'asc')->get();
+        $this->assertEquals('John Doe', $results->first()->name);
+
+        $results = $this->db->collection('users')->orderBy('age', 'desc')->get();
+        $this->assertEquals('Larry Loe', $results->first()->name);
+    }
+
+    public function testSelect()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'Jane Doe', 'foo' => 30, 'bar' => 10],
+            ['name' => 'John Doe', 'foo' => 20, 'bar' => 30],
+            ['name' => 'Mark Moe', 'foo' => 25, 'bar' => 40],
+            ['name' => 'Larry Loe', 'foo' => 40, 'bar' => 50],
+        ]);
+
+        $result = $this->db->collection('users')->select('name as full_name')->first();
+        $this->assertEquals('Jane Doe', $result->full_name);
+        $this->assertObjectNotHasAttribute('name', $result);
+        $this->assertObjectNotHasAttribute('foo', $result);
+        $this->assertObjectNotHasAttribute('bar', $result);
     }
 }

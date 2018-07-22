@@ -104,6 +104,9 @@ class MongoGrammar extends Grammar
         if (!empty($components['addFields'])) {
             $pipeline[] = ['$addFields' => $components['addFields']];
         }
+        if (!empty($components['columns'])) {
+            $pipeline[] = ['$project' => $components['columns']];
+        }
         if (!empty($components['wheres'])) {
             $pipeline[] = ['$match' => $components['wheres']];
         }
@@ -136,7 +139,9 @@ class MongoGrammar extends Grammar
      */
     protected function compileAggregate(Builder $query, $aggregate)
     {
-        $aggregate['columns'] = $this->compileColumns($query, $aggregate['columns']);
+        if (in_array('*', $aggregate['columns'])) {
+            $aggregate['columns'] = [];
+        }
 
         if ($aggregate['function'] === 'count') {
             // If we have passed a column to the count method, we should only count the rows for which this
@@ -153,12 +158,18 @@ class MongoGrammar extends Grammar
 
     /**
      * @param Builder $query
-     * @param array $projection
+     * @param array $projections
      * @return mixed
      */
-    protected function compileProjections(Builder $query, $projection)
+    protected function compileProjections(Builder $query, $projections)
     {
-        return $projection;
+        $compiled = [];
+
+        foreach ($projections as $projection) {
+            $compiled[$projection['column']] = $projection['projection'];
+        }
+
+        return $compiled;
     }
 
     /**
@@ -190,7 +201,18 @@ class MongoGrammar extends Grammar
             return [];
         }
 
-        return $columns;
+        $compiled = [];
+
+        foreach ($columns as $column) {
+            if (false !== stripos($column, ' as ')) {
+                [$original, $alias] = explode(' as ', strtolower($column));
+                $compiled[$alias] = '$' . $original;
+            } else {
+                $compiled[$column] = 1;
+            }
+        }
+
+        return $compiled;
     }
 
     /**
@@ -491,7 +513,21 @@ class MongoGrammar extends Grammar
      */
     protected function compileOrders(Builder $query, $orders)
     {
-        throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
+        $compiled = [];
+
+        foreach ($orders as $order) {
+            if (is_string($order['direction'])) {
+                $order['direction'] = strtolower($order['direction']) === 'asc' ? 1 : -1;
+            }
+
+            if ($order['column'] === 'natural') {
+                $compiled['$natural'] = $order['direction'];
+            } else {
+                $compiled[$order['column']] = $order['direction'];
+            }
+        }
+
+        return $compiled;
     }
 
     /**
