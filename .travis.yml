@@ -16,4 +16,7 @@ install:
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
 
 script:
-  - docker-compose up --exit-code-from tests
+  - docker-compose run tests composer install --prefer-source --no-interaction && php ./vendor/bin/phpunit --coverage-clover ./clover.xml
+
+after_script:
+  - docker-compose run tests composer install --prefer-source --no-interaction && php ./vendor/bin/php-coveralls -v
