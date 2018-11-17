@@ -3,7 +3,7 @@ ARG PHP_VERSION=7.2
 FROM php:${PHP_VERSION}-cli
 
 RUN apt-get update && \
-    apt-get install -y git && \
+    apt-get install -y git zip unzip && \
     pecl install mongodb && docker-php-ext-enable mongodb && \
     pecl install xdebug && docker-php-ext-enable xdebug
 
