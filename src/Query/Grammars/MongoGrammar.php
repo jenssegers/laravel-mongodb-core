@@ -104,7 +104,7 @@ class MongoGrammar extends Grammar
         if (!empty($components['addFields'])) {
             $pipeline[] = ['$addFields' => $components['addFields']];
         }
-        if (!empty($components['columns'])) {
+        if (!empty($components['columns']) && empty($components['groups'])) {
             $pipeline[] = ['$project' => $components['columns']];
         }
         if (!empty($components['wheres'])) {
@@ -118,8 +118,11 @@ class MongoGrammar extends Grammar
                 ],
             ];
         }
-        if (!empty($components['projections'])) {
+        if (!empty($components['projections']) && empty($components['groups'])) {
             $pipeline[] = ['$project' => $components['projections']];
+        }
+        if (!empty($components['groups'])) {
+            $pipeline[] = ['$group' => $components['groups']];
         }
         if (!empty($components['orders'])) {
             $pipeline[] = ['$sort' => $components['orders']];
@@ -481,7 +484,18 @@ class MongoGrammar extends Grammar
      */
     protected function compileGroups(Builder $query, $groups)
     {
-        throw new RuntimeException(__FUNCTION__ . ' not yet implemented');
+        $compiled = [];
+        foreach ($groups as $group) {
+            $compiled['_id'][$group] = '$' . $group;
+            $compiled[$group] = ['$last' => '$' . $group];
+        }
+
+        foreach ($query->columns as $group) {
+            // This mimics MySQL's behaviour where we select the last value of every selected column.
+            $compiled[$group] = ['$last' => '$' . $group];
+        }
+
+        return $compiled;
     }
 
     /**

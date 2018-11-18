@@ -737,4 +737,57 @@ class BuilderTest extends TestCase
         $this->assertCount(0, $user->tags);
         $this->assertCount(0, $user->messages);
     }
+
+    public function testGroupBy()
+    {
+        $this->db->collection('users')->insert([
+            ['name' => 'John Doe', 'age' => 35, 'title' => 'admin'],
+            ['name' => 'Jane Doe', 'age' => 33, 'title' => 'admin'],
+            ['name' => 'Harry Hoe', 'age' => 13, 'title' => 'user'],
+            ['name' => 'Robert Roe', 'age' => 37, 'title' => 'user'],
+            ['name' => 'Mark Moe', 'age' => 23, 'title' => 'user'],
+            ['name' => 'Brett Boe', 'age' => 35, 'title' => 'user'],
+            ['name' => 'Tommy Toe', 'age' => 33, 'title' => 'user'],
+            ['name' => 'Yvonne Yoe', 'age' => 35, 'title' => 'admin'],
+            ['name' => 'Error', 'age' => null, 'title' => null],
+        ]);
+
+        $users = $this->db->collection('users')->select('title')->groupBy('title')->get();
+        $this->assertCount(3, $users);
+
+        $users = $this->db->collection('users')->select('age')->groupBy('age')->get();
+        $this->assertCount(6, $users);
+
+        $users = $this->db->collection('users')->select('age')->groupBy('age')->skip(1)->get();
+        $this->assertCount(5, $users);
+
+        $users = $this->db->collection('users')->select('age')->groupBy('age')->take(2)->get();
+        $this->assertCount(2, $users);
+
+        $users = $this->db->collection('users')->select('age')->groupBy('age')->orderBy('age', 'desc')->get();
+        $this->assertEquals(37, $users[0]->age);
+        $this->assertEquals(35, $users[1]->age);
+        $this->assertEquals(33, $users[2]->age);
+
+        $users = $this->db->collection('users')
+            ->select('age', 'name')
+            ->groupBy('age')
+            ->skip(1)
+            ->take(2)
+            ->orderBy('age', 'desc')
+            ->get();
+        $this->assertCount(2, $users);
+        $this->assertEquals(35, $users[0]->age);
+        $this->assertEquals(33, $users[1]->age);
+
+        $users = $this->db->collection('users')
+            ->select('name')
+            ->groupBy('age')
+            ->skip(1)
+            ->take(2)
+            ->orderBy('age', 'desc')
+            ->get();
+        $this->assertCount(2, $users);
+        $this->assertNotNull($users[0]->name);
+    }
 }
