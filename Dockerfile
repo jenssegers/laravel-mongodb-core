@@ -1,5 +1,7 @@
 ARG PHP_VERSION=7.2
+ARG COMPOSER_VERSION=1.8
 
+FROM composer:${COMPOSER_VERSION}
 FROM php:${PHP_VERSION}-cli
 
 RUN apt-get update && \
@@ -7,13 +9,13 @@ RUN apt-get update && \
     pecl install mongodb && docker-php-ext-enable mongodb && \
     pecl install xdebug && docker-php-ext-enable xdebug
 
-RUN curl -sS https://getcomposer.org/installer | php \
-    && mv composer.phar /usr/local/bin/ \
-    && ln -s /usr/local/bin/composer.phar /usr/local/bin/composer
-
-ADD composer.json /code/composer.json
-ADD composer.lock /code/composer.lock
-RUN cd /code && composer install --prefer-source --no-interaction
+COPY --from=0 /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /code
-ENV PATH="~/.composer/vendor/bin:./vendor/bin:${PATH}"
+
+ADD composer.json composer.json
+# composer.lock isn't exists in git repository
+#ADD composer.lock composer.lock 
+
+RUN composer global require hirak/prestissimo
+RUN composer install --prefer-source --no-interaction
