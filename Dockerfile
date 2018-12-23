@@ -14,6 +14,7 @@ COPY --from=0 /usr/bin/composer /usr/local/bin/composer
 WORKDIR /code
 
 ADD composer.json composer.json
+
 # composer.lock isn't exists in git repository
 #ADD composer.lock composer.lock 
 
