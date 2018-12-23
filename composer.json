@@ -43,6 +43,6 @@
     }
   },
   "scripts": {
-    "run-test": "phpunit --coverage-clover ./clover.xml" 
+    "run-test": "vendor/bin/phpunit --coverage-clover ./clover.xml" 
   }
 }
