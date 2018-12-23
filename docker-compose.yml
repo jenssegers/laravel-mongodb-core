@@ -10,7 +10,7 @@ services:
         volumes:
             - .:/code
         working_dir: /code
-        command: bash -c "composer run-test"
+        command: bash -c "pwd && ls -alt vendor && composer run-test"
         depends_on:
           - mongodb
 
