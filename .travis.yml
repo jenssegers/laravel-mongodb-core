@@ -21,7 +21,6 @@ install:
 
 script:
   - docker-compose run tests
-  - ls -alt
 
 after_script:
   - docker-compose run tests php ./vendor/bin/php-coveralls -v
