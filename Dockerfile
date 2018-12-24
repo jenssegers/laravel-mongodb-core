@@ -23,7 +23,4 @@ WORKDIR /code
 
 ADD composer.json composer.json
 
-# composer.lock isn't exists in git repository
-#ADD composer.lock composer.lock 
-
 RUN composer global require hirak/prestissimo
