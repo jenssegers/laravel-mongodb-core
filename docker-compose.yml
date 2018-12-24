@@ -10,7 +10,7 @@ services:
         volumes:
             - .:/code
         working_dir: /code
-        command: bash -c "ls -alt vendor/bin"
+        command: bash -c "pwd && ls -alt "
         depends_on:
           - mongodb
 
