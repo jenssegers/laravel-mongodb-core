@@ -18,10 +18,12 @@ install:
   - sudo pip install docker-compose
   - docker-compose version
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
-  - ls -alt 
 
 script:
   - docker-compose run tests
+  - ls -alt
 
 after_script:
   - docker-compose run tests php ./vendor/bin/php-coveralls -v
+  - docker-compose ps
+  - docker-compose stop
