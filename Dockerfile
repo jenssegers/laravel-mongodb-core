@@ -20,3 +20,4 @@ ADD composer.json composer.json
 
 RUN composer global require hirak/prestissimo
 RUN composer install --prefer-source --no-interaction
+RUN ls -alt vendor
