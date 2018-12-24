@@ -19,4 +19,3 @@ ADD composer.json composer.json
 #ADD composer.lock composer.lock 
 
 RUN composer global require hirak/prestissimo
-RUN composer install --prefer-source --no-interaction

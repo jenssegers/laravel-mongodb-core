@@ -9,11 +9,16 @@ php:
 services:
   - docker
 
+cache:
+  directories:
+  - $HOME/.composer/cache
+
 install:
   - docker version
   - sudo pip install docker-compose
   - docker-compose version
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
+  - ls -alt 
 
 script:
   - docker-compose run tests

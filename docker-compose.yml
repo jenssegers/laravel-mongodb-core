@@ -10,7 +10,7 @@ services:
         volumes:
             - .:/code
         working_dir: /code
-        command: bash -c "pwd && ls -alt "
+        command: bash -c "composer install --prefer-source --no-interaction && composer run-test"
         depends_on:
           - mongodb
 
