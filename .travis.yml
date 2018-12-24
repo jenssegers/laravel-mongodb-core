@@ -16,7 +16,7 @@ install:
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
 
 script:
-  - docker-compose run tests composer run-test
+  - docker-compose run tests
 
 after_script:
   - docker-compose run tests php ./vendor/bin/php-coveralls -v
