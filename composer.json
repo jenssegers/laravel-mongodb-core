@@ -41,8 +41,5 @@
         "Jenssegers\\Mongodb\\MongodbServiceProvider"
       ]
     }
-  },
-  "scripts": {
-    "run-test": "phpunit --coverage-clover ./clover.xml" 
   }
 }

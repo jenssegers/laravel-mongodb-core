@@ -17,10 +17,6 @@ RUN apt-get update && \
     apt-get install -y git zip unzip && \
     pecl install mongodb && docker-php-ext-enable mongodb
 
-COPY --from=0 /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
 
 WORKDIR /code
-
-ADD composer.json composer.json
-
-RUN composer global require hirak/prestissimo

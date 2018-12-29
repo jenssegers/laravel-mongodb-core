@@ -11,7 +11,7 @@ services:
 
 cache:
   directories:
-  - $HOME/.composer/cache
+    - $HOME/.composer/cache
 
 install:
   - docker version
@@ -20,9 +20,8 @@ install:
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
 
 script:
-  - docker-compose run tests
+  - docker-compose run --rm --no-deps tests composer install --no-interaction
+  - docker-compose run --rm tests ./vendor/bin/phpunit --coverage-clover ./clover.xml
 
 after_script:
-  - docker-compose run tests php ./vendor/bin/php-coveralls -v
-  - docker-compose ps
-  - docker-compose stop
+  - docker-compose run --rm --no-deps tests ./vendor/bin/php-coveralls -v
