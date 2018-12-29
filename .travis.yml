@@ -4,19 +4,25 @@ language: php
 php:
   - "7.1"
   - "7.2"
+  - "7.3"
 
 services:
   - docker
+
+cache:
+  directories:
+  - $HOME/.composer/cache
 
 install:
   - docker version
   - sudo pip install docker-compose
   - docker-compose version
-  - cat Dockerfile
   - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
 
 script:
-  - docker-compose run tests composer install --prefer-source --no-interaction && php ./vendor/bin/phpunit --coverage-clover ./clover.xml
+  - docker-compose run tests
 
 after_script:
   - docker-compose run tests php ./vendor/bin/php-coveralls -v
+  - docker-compose ps
+  - docker-compose stop

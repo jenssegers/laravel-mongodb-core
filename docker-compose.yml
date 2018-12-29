@@ -10,8 +10,7 @@ services:
         volumes:
             - .:/code
         working_dir: /code
-        command: bash -c "composer install --prefer-source --no-interaction && \
-            php ./vendor/bin/phpunit --coverage-clover ./clover.xml"
+        command: bash -c "composer install --prefer-source --no-interaction && composer run-test"
         depends_on:
           - mongodb
 
