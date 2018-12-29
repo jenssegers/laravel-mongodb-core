@@ -1,10 +1,13 @@
-sudo: required
-dist: trusty
-language: php
-php:
-  - "7.1"
-  - "7.2"
-  - "7.3"
+language: minimal
+
+matrix:
+  include:
+    - name: "7.1"
+      env: PHP_VERSION=7.1
+    - name: "7.2"
+      env: PHP_VERSION=7.2
+    - name: "7.3"
+      env: PHP_VERSION=7.3
 
 services:
   - docker
@@ -17,7 +20,7 @@ install:
   - docker version
   - sudo pip install docker-compose
   - docker-compose version
-  - docker-compose build --build-arg PHP_VERSION=${TRAVIS_PHP_VERSION}
+  - docker-compose build --build-arg PHP_VERSION=${PHP_VERSION}
 
 script:
   - docker-compose run --rm --no-deps tests composer install --no-interaction
